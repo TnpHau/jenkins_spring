@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>khalid-spring</artifactId>
+	<artifactId>tnphau-spring</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>khalid-spring</name>
 	<description>Demo project for Spring Boot</description>
