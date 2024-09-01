@@ -2,17 +2,21 @@ pipeline {
 
     agent any
 
-    tools { 
-        maven 'my-maven' 
+    tools {
+        maven 'my-maven'
     }
     environment {
         MYSQL_ROOT_LOGIN = credentials('mysql-root-login')
     }
     stages {
 
-        stage('Initialize'){
-            def dockerHome = tool 'myDocker'
-            env.PATH = "${dockerHome}/bin:${env.PATH}"
+         stage('Initialize') {
+            steps {
+                script {
+                    def dockerHome = tool 'myDocker'
+                    env.PATH = "${dockerHome}/bin:${env.PATH}"
+                }
+            }
         }
 
          stage('Deploy MySQL to DEV') {
@@ -59,7 +63,7 @@ pipeline {
                 sh 'docker container run -d --rm --name tnphau-springboot -p 8081:8080 --network dev tnphau/springboot'
             }
         }
- 
+
     }
     post {
         // Clean after build
