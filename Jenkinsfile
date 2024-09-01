@@ -1,37 +1,35 @@
 pipeline {
-
     agent any
 
     tools {
         maven 'my-maven'
     }
+
     environment {
         MYSQL_ROOT_LOGIN = credentials('mysql-root-login')
     }
-    stages {
 
+    stages {
         stage('Initialize') {
             steps {
-                node { // Bao trong node
-                    script {
-                        def dockerHome = tool 'myDocker'
-                        env.PATH = "${dockerHome}/bin:${env.PATH}"
-                    }
+                script {
+                    def dockerHome = tool 'myDocker'
+                    env.PATH = "${dockerHome}/bin:${env.PATH}"
                 }
             }
         }
 
         stage('Deploy MySQL to DEV') {
             steps {
-                node { // Bao trong node
+                node('any') {  // Bao trong node với label 'any'
                     echo 'Deploying and cleaning'
                     sh 'docker image pull mysql:latest'
                     sh 'docker network create dev || echo "this network exists"'
-                    sh 'docker container stop tnphau-mysql || echo "this container does not exist" '
-                    sh 'echo y | docker container prune '
+                    sh 'docker container stop tnphau-mysql || echo "this container does not exist"'
+                    sh 'echo y | docker container prune'
                     sh 'docker volume rm tnphau-mysql-data || echo "no volume"'
 
-                    sh "docker run --name tnphau-mysql --rm --network dev -v tnphau-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_LOGIN_PSW} -e MYSQL_DATABASE=db_example  -d mysql:latest "
+                    sh "docker run --name tnphau-mysql --rm --network dev -v tnphau-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_LOGIN_PSW} -e MYSQL_DATABASE=db_example  -d mysql:latest"
                     sh 'sleep 20'
                     sh "docker exec -i tnphau-mysql mysql --user=root --password=${MYSQL_ROOT_LOGIN_PSW} < script"
                 }
@@ -40,7 +38,7 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                node { // Bao trong node
+                node('any') {  // Bao trong node với label 'any'
                     sh 'mvn --version'
                     sh 'java -version'
                     sh 'mvn clean package -Dmaven.test.failure.ignore=true'
@@ -48,9 +46,9 @@ pipeline {
             }
         }
 
-        stage('Packaging/Pushing image') {
+        stage('Packaging/Pushing Image') {
             steps {
-                node { // Bao trong node
+                node('any') {  // Bao trong node với label 'any'
                     withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
                         sh 'docker build -t tnphau/springboot .'
                         sh 'docker push tnphau/springboot'
@@ -61,24 +59,22 @@ pipeline {
 
         stage('Deploy Spring Boot to DEV') {
             steps {
-                node { // Bao trong node
+                node('any') {  // Bao trong node với label 'any'
                     echo 'Deploying and cleaning'
                     sh 'docker image pull tnphau/springboot'
-                    sh 'docker container stop tnphau-springboot || echo "this container does not exist" '
+                    sh 'docker container stop tnphau-springboot || echo "this container does not exist"'
                     sh 'docker network create dev || echo "this network exists"'
-                    sh 'echo y | docker container prune '
+                    sh 'echo y | docker container prune'
 
                     sh 'docker container run -d --rm --name tnphau-springboot -p 8081:8080 --network dev tnphau/springboot'
                 }
             }
         }
-
     }
+
     post {
         always {
-            node { // Bao trong node
-                cleanWs() // Bao cleanWs trong node
-            }
+            cleanWs()
         }
     }
 }
