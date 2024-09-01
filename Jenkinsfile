@@ -21,7 +21,7 @@ pipeline {
 
         stage('Deploy MySQL to DEV') {
             steps {
-                node('any') {  // Bao trong node với label 'any'
+                node('any') {
                     echo 'Deploying and cleaning'
                     sh 'docker image pull mysql:latest'
                     sh 'docker network create dev || echo "this network exists"'
@@ -38,7 +38,7 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                node('any') {  // Bao trong node với label 'any'
+                node('any') {
                     sh 'mvn --version'
                     sh 'java -version'
                     sh 'mvn clean package -Dmaven.test.failure.ignore=true'
@@ -48,7 +48,7 @@ pipeline {
 
         stage('Packaging/Pushing Image') {
             steps {
-                node('any') {  // Bao trong node với label 'any'
+                node('any') {
                     withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
                         sh 'docker build -t tnphau/springboot .'
                         sh 'docker push tnphau/springboot'
@@ -59,7 +59,7 @@ pipeline {
 
         stage('Deploy Spring Boot to DEV') {
             steps {
-                node('any') {  // Bao trong node với label 'any'
+                node('any') {
                     echo 'Deploying and cleaning'
                     sh 'docker image pull tnphau/springboot'
                     sh 'docker container stop tnphau-springboot || echo "this container does not exist"'
@@ -74,7 +74,9 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            node('any') { // Bao quanh cleanWs bằng node block
+                cleanWs()
+            }
         }
     }
 }
