@@ -54,17 +54,11 @@ pipeline {
                 sh 'docker container run -d --rm --name tnphau-springboot -p 8081:8080 --network dev tnphau/springboot'
             }
         }
-
-        stage('CleanWorkspace') {
-            steps {
-                cleanWs()
-            }
-        }
     }
 
-//     post {
-//         always {
-//             cleanWs()
-//         }
-//     }
+    post {
+        always {
+            cleanWs()
+        }
+    }
 }
