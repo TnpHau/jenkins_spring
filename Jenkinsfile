@@ -10,6 +10,15 @@ pipeline {
     }
 
     stages {
+
+        stage('Checkout Code') {
+            steps {
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[url: 'https://github.com/TnpHau/jenkins_spring.git']]])
+            }
+        }
+
         stage('Login Docker') {
             steps {
                 script {
@@ -19,7 +28,6 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy MySQL to DEV') {
             steps {
                 script {
@@ -30,10 +38,7 @@ pipeline {
                     sh 'echo y | docker container prune'
                     sh 'docker volume rm tnphau-mysql-data || echo "no volume"'
 
-                    sh "docker run --name tnphau-mysql --rm --network dev -v tnphau-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_LOGIN_PSW -e MYSQL_DATABASE=db_example -d mysql:latest"
-                    sh 'sleep 20'
-
-                    sh "docker exec -i tnphau-mysql mysql --user=root --password=$MYSQL_ROOT_LOGIN_PSW < script"
+                    sh "docker run --name tnphau-mysql --rm --network dev -p 3306:3306 -v tnphau-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_LOGIN_PSW -e MYSQL_DATABASE=db_example -e MYSQL_USER=tnphau -e MYSQL_PASSWORD=Aa@123 -d mysql:latest"
                 }
             }
         }
