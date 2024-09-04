@@ -11,6 +11,14 @@ pipeline {
 
     stages {
 
+        stage('Login Docker') {
+            script {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                }
+            }
+        }
+
         stage('Deploy MySQL to DEV') {
             steps {
                 echo 'Deploying and cleaning'
