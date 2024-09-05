@@ -11,13 +11,13 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
-            steps {
-                checkout([$class: 'GitSCM',
-                          branches: [[name: '*/main']],
-                          userRemoteConfigs: [[url: 'https://github.com/TnpHau/jenkins_spring.git']]])
-            }
-        }
+//         stage('Checkout Code') {
+//             steps {
+//                 checkout([$class: 'GitSCM',
+//                           branches: [[name: '*/main']],
+//                           userRemoteConfigs: [[url: 'https://github.com/TnpHau/jenkins_spring.git']]])
+//             }
+//         }
 
         stage('Login Docker') {
             steps {
