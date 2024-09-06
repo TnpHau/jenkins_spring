@@ -10,6 +10,15 @@ pipeline {
     }
 
     stages {
+
+        stage('Checkout Code') {
+            steps {
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[url: 'https://github.com/TnpHau/jenkins_spring.git']]])
+            }
+        }
+
         stage('Login Docker') {
             steps {
                 script {
@@ -42,7 +51,7 @@ pipeline {
                 script {
                     // Sử dụng Docker của Minikube để build image
                     sh 'docker build -t tnphau/springboot .'
-                    sh 'docker tag tnphau/springboot:latest tnphau/springboot:latest'
+                    sh 'docker push tnphau/springboot'
                 }
             }
         }
