@@ -40,8 +40,12 @@ pipeline {
         stage('Set Minikube Docker Daemon') {
             steps {
                 script {
-                    // Thiết lập Docker của Minikube
-                    bat 'FOR /f "tokens=*" %i IN (\'minikube docker-env --shell=cmd\') DO %i'
+                    // Thiết lập Docker của Minikube bằng PowerShell
+                    powershell '''
+                    minikube start
+                    $envVars = & minikube -p minikube docker-env --shell=cmd
+                    Invoke-Expression $envVars
+                    '''
                 }
             }
         }
