@@ -10,15 +10,6 @@ pipeline {
     }
 
     stages {
-
-//         stage('Checkout Code') {
-//             steps {
-//                 checkout([$class: 'GitSCM',
-//                           branches: [[name: '*/main']],
-//                           userRemoteConfigs: [[url: 'https://github.com/TnpHau/jenkins_spring.git']]])
-//             }
-//         }
-
         stage('Login Docker') {
             steps {
                 script {
@@ -29,22 +20,6 @@ pipeline {
             }
         }
 
-//         stage('Deploy MySQL to DEV') {
-//             steps {
-//                 script {
-//                     echo 'Deploying and cleaning'
-//                     sh 'docker image pull mysql:latest'
-//                     sh 'docker network create dev || echo "this network exists"'
-//                     sh 'docker container stop tnphau-mysql || echo "this container does not exist"'
-//                     sh 'echo y | docker container prune'
-//                     sh 'docker volume rm tnphau-mysql-data || echo "no volume"'
-//
-//                     sh "docker run --name tnphau-mysql --rm --network dev -p 3306:3306 -v tnphau-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_LOGIN_PSW -e MYSQL_DATABASE=db_example -e MYSQL_USER=tnphau -e MYSQL_PASSWORD=Aa@123 -d mysql:latest"
-//                     sh 'sleep 20'
-//                 }
-//             }
-//         }
-
         stage('Build with Maven') {
             steps {
                 sh 'mvn --version'
@@ -53,33 +28,32 @@ pipeline {
             }
         }
 
-        stage('Packaging/Pushing Image') {
-            steps {
-                withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
-                    sh 'docker build -t tnphau/springboot .'
-                    sh 'docker push tnphau/springboot'
-                }
-            }
-        }
-
-        stage('Deploy Spring Boot to DEV') {
+        stage('Set Minikube Docker Daemon') {
             steps {
                 script {
-                    echo 'Deploying and cleaning'
-                    sh 'docker image pull tnphau/springboot'
-                    sh 'docker container stop tnphau-springboot || echo "this container does not exist"'
-                    sh 'docker network create dev || echo "this network exists"'
-                    sh 'echo y | docker container prune'
-
-                    sh 'docker container run -d --rm --name tnphau-springboot -p 8081:8080 --network dev tnphau/springboot'
+                    // Thiết lập Docker của Minikube
+                    bat 'FOR /f "tokens=*" %i IN (\'minikube docker-env --shell=cmd\') DO %i'
                 }
             }
         }
-    }
 
-    post {
-        always {
-            cleanWs()
+        stage('Packaging/Pushing Image to Minikube') {
+            steps {
+                script {
+                    // Sử dụng Docker của Minikube để build image
+                    sh 'docker build -t tnphau/springboot .'
+                    sh 'docker tag tnphau/springboot:latest tnphau/springboot:latest'
+                }
+            }
+        }
+
+        stage('Deploy Spring Boot on Minikube') {
+            steps {
+                script {
+                    // Triển khai ứng dụng lên Minikube
+                    sh 'kubectl apply -f k8s.yaml'  // Cập nhật với file manifest của bạn
+                }
+            }
         }
     }
 }
